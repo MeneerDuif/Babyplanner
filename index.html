@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabyGids AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #fcfaf7;
+            --bg-card: #ffffff;
+            --bg-sidebar: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --accent: #f43f5e;
+            --accent-soft: #fff1f2;
+            --border: #f1f5f9;
+            --radius-card: 1.5rem;
+            --border-width: 1px;
+        }
+
+        [data-theme='amoled'] {
+            --bg-page: #000000;
+            --bg-card: #121212;
+            --bg-sidebar: #000000;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --accent: #fb7185;
+            --accent-soft: #27272a;
+            --border: #27272a;
+        }
+
+        [data-theme='mondriaan'] {
+            --bg-page: #ffffff;
+            --bg-card: #ffffff;
+            --bg-sidebar: #ffffff;
+            --text-main: #000000;
+            --text-muted: #333333;
+            --accent: #e61919; /* Red */
+            --accent-soft: #ffe600; /* Yellow */
+            --border: #000000;
+            --radius-card: 0px;
+            --border-width: 4px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        h1, h2, h3 {
+            font-family: 'Quicksand', sans-serif;
+        }
+        .themed-card {
+            background-color: var(--bg-card);
+            border: var(--border-width) solid var(--border);
+            border-radius: var(--radius-card);
+            color: var(--text-main);
+        }
+        .themed-sidebar {
+            background-color: var(--bg-sidebar);
+            border-right: var(--border-width) solid var(--border);
+        }
+        .themed-text-muted { color: var(--text-muted); }
+        .themed-accent-bg { background-color: var(--accent); }
+        .themed-accent-text { color: var(--accent); }
+        .themed-accent-soft-bg { background-color: var(--accent-soft); }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
