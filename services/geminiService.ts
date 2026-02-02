@@ -20,11 +20,15 @@ const getAIClient = () => {
 };
 
 const getSystemInstruction = (isPregnant: boolean) => `Je bent een gespecialiseerde AI-assistent voor ${isPregnant ? 'zwangerschap en voorbereiding op de baby' : 'baby-informatie en kraamtijd'}. 
-Je gebruikt UITSLUITEND betrouwbare Nederlandse bronnen, met name 24baby.nl en https://www.verloskundigenpraktijkutrecht.nl/tips.html.
-Geef ALTIJD bronvermeldingen met titels en directe linkjes.
-Antwoord altijd in het Nederlands.
-${isPregnant ? 'Focus op zwangerschapssymptomen, voorbereiding op de bevalling en prenatale zorg.' : 'Focus op babyontwikkeling, voeding, slaap en herstel van de moeder.'}
-Als je een vraag krijgt waarvoor geen informatie beschikbaar is bij deze bronnen, geef dat dan eerlijk aan en adviseer contact op te nemen met een verloskundige of consultatiebureau.`;
+Je gebruikt de ingebouwde Google Search tool om UITSLUITEND betrouwbare informatie te vinden op 24baby.nl en verloskundigenpraktijkutrecht.nl.
+
+BELANGRIJK: 
+1. Genereer NOOIT een link op basis van aannames. Gebruik de Google Search tool om de exacte URL van het artikel te vinden.
+2. Controleer of de URL's die je geeft daadwerkelijk bestaan op 24baby.nl of verloskundigenpraktijkutrecht.nl.
+3. Antwoord altijd in het Nederlands.
+4. Geef ALTIJD bronvermeldingen met de correcte, werkende directe linkjes naar het artikel.
+
+${isPregnant ? 'Focus op zwangerschapssymptomen, voorbereiding op de bevalling en prenatale zorg.' : 'Focus op babyontwikkeling, voeding, slaap en herstel van de moeder.'}`;
 
 export async function askBabyQuestion(question: string, birthDate: string): Promise<AIResponse> {
   const isPregnant = new Date(birthDate) > new Date();
@@ -32,9 +36,10 @@ export async function askBabyQuestion(question: string, birthDate: string): Prom
   
   const response = await client.models.generateContent({
     model: modelName,
-    contents: question,
+    contents: `Vraag: ${question}\n\nZoek op 24baby.nl en verloskundigenpraktijkutrecht.nl naar het antwoord en geef de werkende linkjes naar de bronnen.`,
     config: {
       systemInstruction: getSystemInstruction(isPregnant),
+      tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -62,7 +67,7 @@ export async function askBabyQuestion(question: string, birthDate: string): Prom
   } catch (e) {
     console.error("Failed to parse AI response", e);
     return {
-      answer: "Er is een fout opgetreden bij het ophalen van de informatie.",
+      answer: "Er is een fout opgetreden bij het ophalen van de informatie. Mogelijk zijn de bronnen tijdelijk onbereikbaar.",
       sources: []
     };
   }
@@ -82,19 +87,18 @@ export async function generateAgenda(birthDate: string, numWeeks: number = 4): P
     const weeksRemaining = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
     currentWeek = Math.max(1, 40 - weeksRemaining);
     
-    prompt = `De gebruiker is momenteel in week ${currentWeek} van de zwangerschap (uitgerekend op ${birthDate.split('T')[0]}). 
-    Genereer een agenda voor de KOMENDE ${numWeeks} WEKEN. 
-    Lijst de weken op van week ${currentWeek + 1} tot en met week ${currentWeek + numWeeks}. 
-    Geef per week de belangrijkste ontwikkelingen van de baby, symptomen voor de moeder en to-do's gebaseerd op de Nederlandse richtlijnen.
-    Bronnen: 24baby.nl en verloskundigenpraktijkutrecht.nl.`;
+    prompt = `De gebruiker is momenteel in week ${currentWeek} van de zwangerschap. 
+    Genereer een agenda voor de KOMENDE ${numWeeks} WEKEN (week ${currentWeek + 1} t/m ${currentWeek + numWeeks}). 
+    Zoek voor elke week een specifiek relevant artikel op 24baby.nl of verloskundigenpraktijkutrecht.nl over babyontwikkeling of moederzorg.
+    Zorg dat de sourceUrl een ECHTE, bestaande link is gevonden via Google Search.`;
   } else {
     const diffTime = now.getTime() - dueDate.getTime();
     currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
     
-    prompt = `De baby is momenteel ${currentWeek} weken oud (geboren op ${birthDate.split('T')[0]}). 
-    Genereer een agenda voor de KOMENDE ${numWeeks} WEKEN (wanneer de baby ${currentWeek + 1} tot ${currentWeek + numWeeks} weken oud is). 
-    Geef per week tips over voeding, slaapritme, mijlpalen en zorg voor de baby en het herstel van de moeder.
-    Bronnen: 24baby.nl en verloskundigenpraktijkutrecht.nl.`;
+    prompt = `De baby is momenteel ${currentWeek} weken oud. 
+    Genereer een agenda voor de KOMENDE ${numWeeks} WEKEN (baby leeftijd ${currentWeek + 1} t/m ${currentWeek + numWeeks} weken). 
+    Zoek voor elke week specifieke tips op 24baby.nl of verloskundigenpraktijkutrecht.nl.
+    Zorg dat de sourceUrl een ECHTE, bestaande link is gevonden via Google Search.`;
   }
 
   const response = await client.models.generateContent({
@@ -102,6 +106,7 @@ export async function generateAgenda(birthDate: string, numWeeks: number = 4): P
     contents: prompt,
     config: {
       systemInstruction: getSystemInstruction(isPregnant),
+      tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.ARRAY,
@@ -109,8 +114,7 @@ export async function generateAgenda(birthDate: string, numWeeks: number = 4): P
           type: Type.OBJECT,
           properties: {
             week: { 
-              type: Type.NUMBER, 
-              description: isPregnant ? "De week van de zwangerschap" : "De leeftijd van de baby in weken" 
+              type: Type.NUMBER 
             },
             title: { type: Type.STRING },
             description: { type: Type.STRING },
