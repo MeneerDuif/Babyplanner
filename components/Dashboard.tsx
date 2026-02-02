@@ -13,7 +13,9 @@ import {
   Send,
   Heart,
   ArrowRight,
-  Clock
+  Clock,
+  LayoutGrid,
+  Trello
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -30,6 +32,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, profile, checklist, on
   const [chatResponse, setChatResponse] = useState<AIResponse | null>(null);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<number>(4);
+  const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
 
   const birthDate = new Date(profile.birthDate);
   const now = new Date();
@@ -228,7 +231,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, profile, checklist, on
 
   if (activeTab === 'agenda') {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6">
         <div className="themed-card p-8 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left flex-1">
             <h2 className="text-3xl font-bold">{isPregnant ? 'Zwangerschap Planning' : 'Agenda'}</h2>
@@ -242,21 +245,41 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, profile, checklist, on
           </div>
 
           <div className="flex flex-col items-center md:items-end gap-3">
-            <div className="flex bg-gray-100 p-1 rounded-2xl themed-card">
-              {[4, 6, 8].map(weeks => (
-                <button
-                  key={weeks}
-                  onClick={() => setSelectedDuration(weeks)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    selectedDuration === weeks 
-                      ? 'themed-accent-bg text-white shadow-md' 
-                      : 'themed-text-muted hover:bg-white/50'
-                  }`}
+            <div className="flex space-x-4 items-center">
+              <div className="flex bg-gray-100 p-1 rounded-2xl themed-card">
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'themed-accent-bg text-white' : 'themed-text-muted'}`}
+                  title="Rasterweergave"
                 >
-                  {weeks} Weken
+                  <LayoutGrid size={18} />
                 </button>
-              ))}
+                <button 
+                  onClick={() => setViewMode('timeline')}
+                  className={`p-2 rounded-xl transition-all ${viewMode === 'timeline' ? 'themed-accent-bg text-white' : 'themed-text-muted'}`}
+                  title="Tijdlijnweergave"
+                >
+                  <Trello size={18} className="rotate-90" />
+                </button>
+              </div>
+
+              <div className="flex bg-gray-100 p-1 rounded-2xl themed-card">
+                {[4, 6, 8].map(weeks => (
+                  <button
+                    key={weeks}
+                    onClick={() => setSelectedDuration(weeks)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      selectedDuration === weeks 
+                        ? 'themed-accent-bg text-white shadow-md' 
+                        : 'themed-text-muted hover:bg-white/50'
+                    }`}
+                  >
+                    {weeks} W
+                  </button>
+                ))}
+              </div>
             </div>
+
             <button 
               onClick={handleGenerateAgenda} 
               disabled={isAgendaLoading}
@@ -268,7 +291,7 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, profile, checklist, on
                 {isAgendaLoading ? 'Genereren...' : (
                   <>
                     <Sparkles size={18} className="mr-2" />
-                    {agenda.length > 0 ? 'Update Planning' : 'Maak Planning'}
+                    {agenda.length > 0 ? 'Update' : 'Maak'} Planning
                   </>
                 )}
               </div>
@@ -276,33 +299,84 @@ const Dashboard: React.FC<DashboardProps> = ({ activeTab, profile, checklist, on
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {agenda.map((item, idx) => (
-            <div key={idx} className="themed-card p-8 shadow-sm hover:themed-accent-soft-bg transition-all relative overflow-hidden group min-h-[220px] flex flex-col">
-               <div className="absolute -top-4 -right-4 w-24 h-24 themed-accent-soft-bg rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-               
-               <div className="relative">
-                 <div className="mb-4 inline-flex items-center px-4 py-1.5 themed-accent-bg text-white rounded-xl text-sm font-bold uppercase tracking-wider shadow-sm">
-                    Week {item.week}
-                 </div>
-                 <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
-                 <p className="themed-text-muted text-base mb-8 leading-relaxed flex-1">{item.description}</p>
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            {agenda.map((item, idx) => (
+              <div key={idx} className="themed-card p-8 shadow-sm hover:themed-accent-soft-bg transition-all relative overflow-hidden group min-h-[220px] flex flex-col">
+                 <div className="absolute -top-4 -right-4 w-24 h-24 themed-accent-soft-bg rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
                  
-                 <div className="pt-6 border-t themed-border flex items-center justify-between">
-                   <a 
-                     href={item.sourceUrl} 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     className="flex items-center text-sm font-bold themed-accent-text hover:underline group/link"
-                   >
-                     Bekijk op {item.source} 
-                     <ExternalLink size={14} className="ml-2" />
-                   </a>
+                 <div className="relative">
+                   <div className="mb-4 inline-flex items-center px-4 py-1.5 themed-accent-bg text-white rounded-xl text-sm font-bold uppercase tracking-wider shadow-sm">
+                      Week {item.week}
+                   </div>
+                   <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
+                   <p className="themed-text-muted text-base mb-8 leading-relaxed flex-1">{item.description}</p>
+                   
+                   <div className="pt-6 border-t themed-border flex items-center justify-between">
+                     <a 
+                       href={item.sourceUrl} 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="flex items-center text-sm font-bold themed-accent-text hover:underline group/link"
+                     >
+                       Bekijk op {item.source} 
+                       <ExternalLink size={14} className="ml-2" />
+                     </a>
+                   </div>
                  </div>
-               </div>
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="themed-card p-8 shadow-sm overflow-x-auto scrollbar-hide animate-in fade-in slide-in-from-bottom-4 duration-300">
+             <div className="relative min-w-[1200px] py-12 px-8">
+                {/* Continuous Timeline Line */}
+                <div className="absolute top-[200px] left-0 right-0 h-1 themed-accent-bg opacity-20 rounded-full"></div>
+                
+                <div className="flex justify-between items-start relative z-10">
+                  {agenda.map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center w-64 group">
+                      {/* Event Card */}
+                      <div className={`mb-12 themed-card p-5 shadow-lg border-b-4 themed-accent-text transition-all duration-300 hover:-translate-y-2 group-hover:shadow-xl w-full ${
+                        idx % 2 === 0 ? 'mt-0' : 'mt-40'
+                      }`}>
+                         <div className="text-[10px] font-bold themed-accent-text uppercase mb-2 tracking-widest">Week {item.week}</div>
+                         <h4 className="font-bold text-sm mb-2 line-clamp-1">{item.title}</h4>
+                         <p className="text-[11px] themed-text-muted line-clamp-3 mb-4">{item.description}</p>
+                         <a href={item.sourceUrl} target="_blank" className="text-[10px] font-bold themed-accent-text flex items-center hover:underline">
+                            Bron: {item.source} <ExternalLink size={10} className="ml-1" />
+                         </a>
+                      </div>
+
+                      {/* Connection Point */}
+                      <div className={`absolute top-[192px] w-5 h-5 rounded-full border-4 themed-card transition-all duration-300 group-hover:scale-125 ${
+                        idx === 0 || item.week <= status.current ? 'themed-accent-bg' : 'border-gray-300 bg-white'
+                      }`}></div>
+                      
+                      {/* Vertical Connection Line */}
+                      <div className={`absolute w-0.5 themed-accent-bg opacity-10 ${
+                        idx % 2 === 0 
+                          ? 'top-[150px] h-[40px]' 
+                          : 'top-[205px] h-[40px]'
+                      }`}></div>
+
+                      <div className="mt-8 font-bold text-xs themed-text-muted group-hover:themed-accent-text transition-colors">
+                        Week {item.week}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {agenda.length === 0 && !isAgendaLoading && (
+          <div className="py-20 text-center themed-card border-dashed">
+            <Calendar className="mx-auto themed-text-muted opacity-20 mb-4" size={48} />
+            <h3 className="text-xl font-bold mb-2">Geen planning gevonden</h3>
+            <p className="themed-text-muted max-w-xs mx-auto text-sm">Genereer een planning om de ontwikkelingen van je baby te zien op de tijdlijn.</p>
+          </div>
+        )}
       </div>
     );
   }
